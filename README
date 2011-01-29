@@ -29,6 +29,9 @@ convenience methods:
       callback                 // function to call after video conversion 
    );
 
+Examples:
+
+   See file test.js
 
 These are the ffmpeg commands used by the module for the convenience methods.
 (If you know how to improve them for better quality/speed, please let me know).
