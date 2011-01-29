@@ -1,0 +1,49 @@
+Node.js module to control ffmpeg
+
+   Documentation and webm convenience method comming asap.
+
+usage:
+
+   var ffmpeg = require('/path/to/ffmpeg-node.js');
+
+   ffmpeg.command(
+      input file,              // string representing a path
+      audio options,           // json-like object of ffmpeg audio options [strings]
+      video options,           // json-like object of ffmpeg video options [strings]
+      video format,            // json-like object of width and height values [strings]
+      output file,             // string with the target /path/file.ext
+      callback                 // function to call after video conversion 
+   );
+
+convenience methods:
+
+   ffmpeg.toMp4(
+      input file,              // string representing a path
+      video format,            // json-like object of width and height values [strings]
+      callback                 // function to call after video conversion 
+   );
+
+   ffmpeg.toOgg(
+      input file,              // string representing a path
+      video format,            // json-like object of width and height values [strings]
+      callback                 // function to call after video conversion 
+   );
+
+
+These are the ffmpeg commands used by the module for the convenience methods.
+(If you know how to improve them for better quality/speed, please let me know).
+
+   mp4:
+
+   ffmpeg -i ./test.3gp -acodec libfaac -ab 128k -ar 41000 -vcodec libx264 -vpre slow -vpre baseline -s 640x360 -r 25 ./test.mp4
+
+
+   ogg:
+
+   ffmpeg -i ./test.3gp -acodec libvorbis -ab 128k -ar 41000 -vcodec libtheora -s 640x360 -r 30 ./test.ogg
+
+   webm:
+
+   ffmpeg -i test.3gp -acodec libvorbis -ab 128k -ar 41000 -vcodec libvpx -s 640x360 -b 614400 -aspect 16:9 video.webm
+
+
