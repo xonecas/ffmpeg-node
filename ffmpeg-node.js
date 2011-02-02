@@ -1,94 +1,184 @@
-// doc missing, dog ate it
+
+/**
+ * Module to drive ffmpeg video enconding library with shortcuts 
+ * for web video. Requires a  ffmpeg compiled with support for mp4/ogg/webm.
+ */
 
 var path = require('path'),
-   exec = require('child_process').exec;
+   spawn = require('child_process').spawn;
 
-exports.command = function (input, audio, video, format, output, callback) {
-   path.exists(input, function (exists) {
-      if (exists) {
-         var command = 'ffmpeg -i '+ input +' ';
+/**
+ * Description:
+ *    calls ffmpeg with the specified flags and returns the output
+ *    to the callback function.
+ *
+ * Parameters:
+ * params - an array of ffmpeg options, ex: ['-i','./test.3gp']
+ * callback - a function to call when ffmpeg is done, ex:
+ *    function (stderr, stdout, exitCode) { ... }
+ */
 
-         if (typeof audio === 'object') {
-            for (flag in audio) {
-               command += '-'+ flag +' '+ audio[flag] +' ';
-            }
-         }
+exports.call = function (params, callback) {
 
-         if (typeof video === 'object') {
-            for (flag in video) {
-               var value = video[flag];
+   if (params instanceof Array && params.length > 2) {
 
-               if (flag === 'vpre' && typeof value === 'object') {
-                  value.forEach(function (preset) {
-                     command += '-vpre '+ preset +' ';
-                  });
-               }
-               else if (typeof value === 'string') {
-                  command += '-'+ flag +' '+ value +' ';
-               }
-               else 
-                  throw new TypeError('Presets must be a string or an array of strings.');
-            }
-         }
+      var stderr = '', stdout = '', 
+         ffmpeg = spawn('ffmpeg', params);
 
-         if (typeof format === 'object' &&
-            typeof format.width === 'string' &&
-            typeof format.height === 'string') {
+      ffmpeg.stderr.on('data', function (err) {
+         stderr += err;
+      });
 
-            command += '-s '+ format.width +'x'+ format.height +' ';
-         }
-         
-         if (typeof output === 'string') {
-            command += output;
-         }
-         else
-            throw new SyntaxError('Output must be a fileName.containerFormat: '+ output);
+      ffmpeg.stdout.on('data', function (output) {
+         stdout += output;
+      });
 
-         exec(command , function (error, stdout, stderr) {
-            if (error) 
-               throw new Error('ffmpeg didn\'t finish successfully: '+ stderr);
-            else 
-               callback();
-         });
-      }
-      else
-         throw new ReferenceError('File not found: '+ input);
-   });
-}
+      ffmpeg.on('exit', function (code) {
+         callback(stderr, stdout, code);
+      });
 
-exports.toMp4 = function (input, format, callback) {
+   }
 
-   var output = path.dirname(input) +'/'+
-      path.basename(input, path.extname(input)) +'.mp4';
-   
-   this.command(input, {
-      'acodec': 'libfaac',
-      'ab': '128k',
-      'ar': '41000'
-   }, {
-      'vcodec': 'libx264',
-      'vpre': ['slow', 'baseline'],
-      'r': '25'
-   }, format, output, callback);
-}
-
-exports.toOgg = function(input, format, callback) {
-   var output = path.dirname(input) +'/'+
-      path.basename(input, path.extname(input)) +'.ogg';
-   
-   this.command(input, {
-      'acodec': 'libvorbis',
-      'ab': '128k',
-      'ar': '41000'
-   }, {
-      'vcodec': 'libtheora',
-      'r': '25'
-   }, format, output, callback);
 }
 
 
+/**
+ * Description:
+ *    serves as middle man for convenience method, required to
+ *    avoid code repetition.
+ *
+ * Parameters:
+ * type - one of 'mp4', 'ogg', 'webm' as a string.
+ * file - path/to/the/inputFile.ext as a string.
+ * params - an array of ffmpeg options to be added to the predefined ones (optional).
+ * output - path/to/the/outputFile.ext as a string (optional).
+ * callback - function to call when ffmpeg is done, ex:
+ *    function (stderr, stdout, exitCode) { ... }
+ */
 
+exports.convert = function (/* overloaded */) {
 
+   var type = arguments[0], file = arguments[1], 
+      params = [], output = '', callback = false;
 
+   if (arguments.length === 3) {
+      params = [],
+      output = path.basename(
+         file, path.extname(file)) +'.'+ type,
+      callback = arguments[2];
+   }
+   else if (arguments.length > 3) {
+      var err = false;
 
+      if (arguments[2] instanceof Array)
+         params = arguments[2];
+      else if (typeof arguments[2] === 'string')
+         output = arguments[2];
+      else if (arguments[2] instanceof Function)
+         callback = arguments[2];
+      else 
+         err = true;
+
+      if (typeof arguments[3] === 'string')
+         output = arguments[3];
+      else if (arguments[3] instanceof Function)
+         callback = arguments[3];
+      else 
+         err = true;
+
+      if (arguments[4] instanceof Function)
+         var callback = arguments[4];
+      else 
+         err = true;
+      
+      if (err)
+         throw new Error('Could not parse arguments');
+   }
+   else
+      throw new Error('Not enough arguments');
+
+   switch(type) {
+      case 'mp4':
+         params = [
+            '-i', file,
+            '-acodec', 'libfaac',
+            '-ab', '128k',
+            '-ar', '41000',
+            '-vcodec', 'libx264',
+            '-vpre', 'slow',
+            '-vpre', 'baseline',
+            '-r', '25',
+            '-y', output
+         ].concat(params);
+      break;
+
+      case 'ogg':
+         params = [
+            '-i', file,
+            '-acodec', 'libvorbis',
+            '-ab', '128k',
+            '-ar', '41000',
+            '-vodec', 'libtheora',
+            '-r', '25',
+            '-y', output
+         ].concat(params);
+      break;
+
+      case 'webm':
+         params = [
+            '-i', file,
+            '-acodec', 'libvorbis',
+            '-ab', '128k',
+            '-ar', '41000',
+            '-vcodec', 'libvpx',
+            '-b', '614400',
+            '-aspect', '16:9',
+            '-y', output
+         ].concat(params);
+      break;
+   }
+
+   this.call(params, callback);
+
+}
+
+/**
+ * Description:
+ *    Convenience methods to convert to popular web formats (flash/html5)
+ *    If you know how to improve these default options, let me know.
+ *
+ * Parameters:
+ * file - path/to/the/inputFile.ext as a string.
+ * params - an array of ffmpeg options to be added to the predefined ones (optional).
+ * output - path/to/the/outputFile.ext as a string (optional).
+ * callback - function to call when ffmpeg is done, ex:
+ *    function (stderr, stdout, exitCode) { ... }
+ */
+
+exports.mp4 = function (/* overloaded */) {
+
+   var unshift = Array.prototype.unshift;
+   unshift.call(arguments, 'mp4');
+
+   this.convert.apply(this, arguments);
+
+}
+
+exports.ogg = function (/* overloaded */) {
+
+   var unshift = Array.prototype.unshift;
+   unshift.call(arguments, 'ogg');
+
+   this.convert.apply(this, arguments);
+
+}
+
+exports.webm = function (/* overloaded */) {
+
+   var unshift = Array.prototype.unshift;
+   unshift.call(arguments, 'webm');
+
+   this.convert.apply(this, arguments);
+
+}
 

@@ -1,32 +1,10 @@
 Node.js module to control ffmpeg
 
-   Documentation and webm convenience method comming asap.
-
 usage:
 
-   var ffmpeg = require('/path/to/ffmpeg-node.js');
-
-   ffmpeg.command(
-      input file,              // string representing a path
-      audio options,           // json-like object of ffmpeg audio options [strings]
-      video options,           // json-like object of ffmpeg video options [strings]
-      video format,            // json-like object of width and height values [strings]
-      output file,             // string with the target /path/file.ext
-      callback                 // function to call after video conversion 
-   );
-
-convenience methods:
-
-   ffmpeg.toMp4(
-      input file,              // string representing a path
-      video format,            // json-like object of width and height values [strings]
-      callback                 // function to call after video conversion 
-   );
-
-   ffmpeg.toOgg(
-      input file,              // string representing a path
-      video format,            // json-like object of width and height values [strings]
-      callback                 // function to call after video conversion 
+   ffmpeg.call(
+      [ ... ],                 // array of ffmpeg flags
+      callback                 // function to call after ffmpeg is done
    );
 
 Examples:
