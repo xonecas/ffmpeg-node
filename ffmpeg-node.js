@@ -18,7 +18,7 @@ var path = require('path'),
  *    function (stderr, stdout, exitCode) { ... }
  */
 
-exports.call = function (params, callback) {
+exports.exec = function (params, callback) {
 
    if (params instanceof Array && params.length > 2) {
 
@@ -70,29 +70,31 @@ exports.convert = function (/* overloaded */) {
    else if (arguments.length > 3) {
       var err = false;
 
-      if (arguments[2] instanceof Array)
+      if (arguments[2] instanceof Array &&
+         typeof arguments[3] === 'string' &&
+         arguments[4] instanceof Function) {
+
          params = arguments[2];
-      else if (typeof arguments[2] === 'string')
+         output = arguments[3];
+         callback = arguments[4];
+      }
+      else if (arguments[2] instanceof Array &&
+         arguments[3] instanceof Function) {
+
+         params = arguments[2];
+         callback = arguments[3];
+      }
+      else if (typeof arguments[2] === string &&
+         arguments[3] instanceof Function) {
+
          output = arguments[2];
+         callback = arguments[3];
+      }
       else if (arguments[2] instanceof Function)
          callback = arguments[2];
-      else 
-         err = true;
+      else
+         throw new Error("Couldn't parse arguments");
 
-      if (typeof arguments[3] === 'string')
-         output = arguments[3];
-      else if (arguments[3] instanceof Function)
-         callback = arguments[3];
-      else 
-         err = true;
-
-      if (arguments[4] instanceof Function)
-         var callback = arguments[4];
-      else 
-         err = true;
-      
-      if (err)
-         throw new Error('Could not parse arguments');
    }
    else
       throw new Error('Not enough arguments');
@@ -138,7 +140,7 @@ exports.convert = function (/* overloaded */) {
       break;
    }
 
-   this.call(params, callback);
+   this.exec(params, callback);
 
 }
 
