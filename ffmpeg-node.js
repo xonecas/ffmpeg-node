@@ -63,7 +63,7 @@ exports.convert = function (/* overloaded */) {
 
    if (arguments.length === 3) {
       params = [],
-      output = path.basename(
+      output = path.dirname(file) +'/'+ path.basename(
          file, path.extname(file)) +'.'+ type,
       callback = arguments[2];
    }
