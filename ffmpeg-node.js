@@ -120,7 +120,7 @@ exports.convert = function (/* overloaded */) {
             '-acodec', 'libvorbis',
             '-ab', '128k',
             '-ar', '41000',
-            '-vodec', 'libtheora',
+            '-vcodec', 'libtheora',
             '-r', '25',
             '-y', output
          ].concat(params);
