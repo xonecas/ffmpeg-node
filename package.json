@@ -1,0 +1,19 @@
+{
+  "name": "ffmpeg-node",
+  "description": "Node.js Module for ffmpeg library",
+  "version": "0.0.1",
+  "main": "ffmpeg-node.js",
+  "homepage": "https://github.com/xonecas/ffmpeg-node",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/xonecas/ffmpeg-node.git"
+  },
+  "author": {
+    "name" : "Sean Caetano Martin",
+    "email" : "seancaetanomartin@gmail.com",
+    "url" : "http://www.xonecas.com/"
+  },
+  "engines": {
+    "node": "*"
+  }
+}
