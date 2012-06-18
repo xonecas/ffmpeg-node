@@ -114,7 +114,7 @@ exports.convert = function (/* overloaded */) {
          params = arguments[2];
          callback = arguments[3];
       }
-      else if (typeof arguments[2] === string &&
+      else if (typeof arguments[2] === 'string' &&
          arguments[3] instanceof Function) {
 
          output = arguments[2];
