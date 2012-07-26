@@ -5,10 +5,12 @@
  */
 
 var path = require('path'),
+    _ = require('underscore'),
     spawn = require('child_process').spawn,
+    helpers = require('./helpers.js'),
     that = this,
-    queue = [],
-    maxActive = 5, // Maximum of active FFMpeg jobs
+    queue = exports.queue = [],
+    maxActive = 4, // Maximum of active FFMpeg jobs
     active = 0;
 
 
@@ -24,14 +26,11 @@ function push (job) {
 
 function next () {
    if(queue.length > 0 && active < maxActive) {
-      console.log(queue[0]);
       that.exec(queue[0].params, queue[0].callback);
       active++;
       queue.shift();
    }
 }
-
-
 
 /**
  * Description:
@@ -39,14 +38,12 @@ function next () {
  *    to the callback function.
  *
  * Parameters:
- * params - an array of ffmpeg options, ex: ['-i','./test.3gp']
+ * params - an object of ffmpeg options, ex: {'-i': './test.3gp', '-vpre': ['slow', 'baseline'], '-vcodec': 'libx264'}
  * callback - a function to call when ffmpeg is done, ex:
  *    function (stderr, stdout, exitCode) { ... }
  */
 
 exports.exec = function (params, callback) {
-   console.log(params, callback);
-   
    if (params instanceof Array && params.length > 2) {
 
       var stderr = '', stdout = '',
@@ -66,8 +63,13 @@ exports.exec = function (params, callback) {
          next();
       });
 
+   } else {
+      if (params instanceof Array && params.length <= 2) {
+         console.log('Params to short for ffmpeg');
+         active--;
+         next();
+      }
    }
-
 };
 
 
@@ -79,7 +81,7 @@ exports.exec = function (params, callback) {
  * Parameters:
  * type - one of 'mp4', 'ogg', 'webm', 'mp3', 'm4a' as a string.
  * file - path/to/the/inputFile.ext as a string.
- * params - an array of ffmpeg options to be added to the predefined ones (optional).
+ * params - an object of ffmpeg options to be added to the predefined ones (optional).
  * output - path/to/the/outputFile.ext as a string (optional).
  * callback - function to call when ffmpeg is done, ex:
  *    function (stderr, stdout, exitCode) { ... }
@@ -88,11 +90,13 @@ exports.exec = function (params, callback) {
 
 exports.convert = function (/* overloaded */) {
 
-   var type = arguments[0], file = arguments[1],
-      params = [], output = '', callback = false;
+   var type = arguments[0],
+       file = arguments[1],
+       params = {}, output = '',
+       callback = false;
 
    if (arguments.length === 3) {
-      params = [],
+      params = {},
       output = path.dirname(file) +'/'+ path.basename(
          file, path.extname(file)) +'.'+ type,
       callback = arguments[2];
@@ -100,7 +104,7 @@ exports.convert = function (/* overloaded */) {
    else if (arguments.length > 3) {
       var err = false;
 
-      if (arguments[2] instanceof Array &&
+      if (arguments[2] instanceof Object &&
          typeof arguments[3] === 'string' &&
          arguments[4] instanceof Function) {
 
@@ -108,7 +112,7 @@ exports.convert = function (/* overloaded */) {
          output = arguments[3];
          callback = arguments[4];
       }
-      else if (arguments[2] instanceof Array &&
+      else if (arguments[2] instanceof Object &&
          arguments[3] instanceof Function) {
 
          params = arguments[2];
@@ -129,64 +133,66 @@ exports.convert = function (/* overloaded */) {
    else
       throw new Error('Not enough arguments');
 
+
+   // Here the params array should be modified into an object which can be extend
    switch(type) {
       case 'mp4':
-         params = [
-            '-i', file,
-            '-acodec', 'libfaac',
-            '-ab', '128k',
-            '-ar', '44100',
-            '-vcodec', 'libx264',
-            '-vpre', 'slow',
-            '-vpre', 'baseline',
-            '-r', '25',
-            '-y', output
-         ].concat(params);
+         params = helpers.objectToArray(_({
+            '-i': file,
+            '-acodec': 'aac',
+            '-ab': '128k',
+            '-ar': '44100',
+            '-vcodec': 'libx264',
+            '-vpre': ['slow','baseline'],
+            '-r': '25',
+            '-y': output
+         }).extend(params));
       break;
 
       case 'ogg':
-         params = [
-            '-i', file,
-            '-acodec', 'libvorbis',
-            '-ab', '128k',
-            '-ar', '44100',
-            '-vcodec', 'libtheora',
-            '-r', '25',
-            '-y', output
-         ].concat(params);
+         params = helpers.objectToArray(_({
+            '-i': file,
+            '-acodec': 'libvorbis',
+            '-ab': '128k',
+            '-ar': '44100',
+            '-vcodec': 'libtheora',
+            '-r': '25',
+            '-y': output
+         }).extend(params));
       break;
 
       case 'webm':
-         params = [
-            '-i', file,
-            '-acodec', 'libvorbis',
-            '-ab', '128k',
-            '-ar', '44100',
-            '-vcodec', 'libvpx',
-            '-b', '614400',
-            '-aspect', '16:9',
-            '-y', output
-         ].concat(params);
+         params = helpers.objectToArray(_({
+            '-i': file,
+            '-acodec': 'libvorbis',
+            '-ab': '128k',
+            '-ar': '44100',
+            '-vcodec': 'libvpx',
+            '-b': '614400',
+            '-aspect': '16:9',
+            '-y': output
+         }).extend(params));
       break;
 
       case 'mp3':
-         params = [
-            '-i', file,
-            '-acodec', 'libmp3lame',
-            '-ab', '128k',
-            '-ar', '44100',
-            '-y', output
-         ].concat(params);
+         params = helpers.objectToArray(_({
+            '-i': file,
+            '-acodec': 'libmp3lame',
+            '-ab': '128k',
+            '-ar': '44100',
+            '-y': output
+         }).extend(params));
       break;
 
       case 'm4a':
-         params = [
-            '-i', file,
-            '-acodec', 'aac',
-            '-ab', '64k',
-            '-ar', '44100',
-            '-y', output
-         ].concat(params);
+         params = helpers.objectToArray(_({
+            '-i': file,
+            '-acodec': 'aac',
+            '-ab': '64k',
+            '-ar': '44100',
+            '-strict': '-2',
+            '-y': output
+         }).extend(params));
       break;
    }
 
