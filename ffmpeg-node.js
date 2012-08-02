@@ -6,15 +6,14 @@
 
 var path = require('path'),
     _ = require('underscore'),
-    spawn = require('child_process').spawn,
+    child_process = require('child_process'),
+    spawn = child_process.spawn,
     helpers = require('./helpers.js'),
     that = this,
     queue = exports.queue = [],
     maxActive = 4, // Maximum of active FFMpeg jobs
     active = 0;
 
-
-// The queue is limited to a max. of 5 active ffmpeg processes.
 
 
 function push (job) {
@@ -259,3 +258,19 @@ exports.m4a = function (/* overloaded */) {
 
 };
 
+/*
+*  The function takes a absolute file path and returns a meta data object
+*  @params {String} input
+*  @params {Callback} callback function(error, jsonMetaObject)
+*/
+
+exports.getMetadata = function (input, callback) {
+   child_process.exec("ffprobe -loglevel error -show_format -show_streams " + input + " -print_format json", function (error, stdout, stderr) {
+      try {
+         stdout = JSON.parse(stdout);
+         callback(error, stdout);
+      } catch (e) {
+         callback(error, stdout);
+      }
+   });
+};
