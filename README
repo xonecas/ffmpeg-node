@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/xonecas/ffmpeg-node.png)](http://travis-ci.org/xonecas/ffmpeg-node)
 Node.js module to control ffmpeg
 
 usage:
