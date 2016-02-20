@@ -1,20 +1,26 @@
+#FFMPEG-NODE
+
 Node.js module to control ffmpeg
+### To install
+>npm install ffmpeg-node
 
-usage:
+### Usage
 
-   ffmpeg.call(
+```   
+ffmpeg.call(
       [ ... ],                 // array of ffmpeg flags
       callback                 // function to call after ffmpeg is done
    );
+   ```
 
 Examples:
-
-   See file test.js
+>See file test.js
 
 These are the ffmpeg commands used by the module for the convenience methods.
 (If you know how to improve them for better quality/speed, please let me know).
 
-   mp4:
+ ```
+ mp4:
 
    ffmpeg -i ./test.3gp \
       -acodec libfaac -ab 128k -ar 41000 \
@@ -36,4 +42,4 @@ These are the ffmpeg commands used by the module for the convenience methods.
       -vcodec libvpx -s 640x360 -b 614400 -aspect 16:9 \
       ./video.webm
 
-
+``` 
