@@ -37,7 +37,7 @@ function next () {
  *    to the callback function.
  *
  * Parameters:
- * params - an object of ffmpeg options, ex: {'-i': './test.3gp', '-vpre': ['slow', 'baseline'], '-vcodec': 'libx264'}
+ * params - an array of ffmpeg options, ex, ['-i', './test.3gp', '-vpre', 'slow', '-vpre', 'baseline', '-vcodec', 'libx264']
  * callback - a function to call when ffmpeg is done, ex:
  *    function (stderr, stdout, exitCode) { ... }
  */
